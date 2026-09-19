@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mijn Digitale Platenkast</title>
+    <style>
+        /* De achtergrond van de platenkast */
+        body {
+            background-color: #1e1e1e;
+            color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        /* Het raster (grid) dat de kast vormt */
+        .platenkast {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #2d251e; /* Houtkleurige kast-achtergrond */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Een individueel albumvakje */
+        .album-kaart {
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        /* Animatie: de hoes komt een stukje omhoog als je eroverheen beweegt */
+        .album-kaart:hover {
+            transform: translateY(-10px);
+        }
+
+        /* De albumhoes */
+        .hoes {
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Altijd perfect vierkant, net als een echte LP */
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            background-color: #333; /* Tijdelijke kleur als de foto laadt */
+        }
+
+        .titel {
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 1.1em;
+        }
+
+        .artiest {
+            color: #b3b3b3;
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎵 Mijn LP Collectie</h1>
+
+    <!-- Hier begint de platenkast -->
+    <div class="platenkast">
+
+        <!-- Album 1 -->
+        <div class="album-kaart" onclick="alert('Hier kun je later de Spotify/YouTube link openen voor Abbey Road!')">
+            <img class="hoes" src="https://unsplash.com" alt="Abbey Road - The Beatles">
+            <div class="titel">Abbey Road</div>
+            <div class="artiest">The Beatles (1969)</div>
+        </div>
+
+        <!-- Album 2 -->
+        <div class="album-kaart" onclick="alert('Hier kun je later de Spotify/YouTube link openen voor The Dark Side of the Moon!')">
+            <img class="hoes" src="https://unsplash.com" alt="The Dark Side of the Moon - Pink Floyd">
+            <div class="titel">The Dark Side of the Moon</div>
+            <div class="artiest">Pink Floyd (1973)</div>
+        </div>
+
+        <!-- Album 3 -->
+        <div class="album-kaart" onclick="alert('Hier kun je later de Spotify/YouTube link openen voor Thriller!')">
+            <img class="hoes" src="https://unsplash.com" alt="Thriller - Michael Jackson">
+            <div class="titel">Thriller</div>
+            <div class="artiest">Michael Jackson (1982)</div>
+        </div>
+
+    </div>
+
+</body>
+</html>
