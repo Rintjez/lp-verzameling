@@ -15,6 +15,7 @@
 
     h1 { text-align: center; }
 
+    /* MENU */
     .menu {
         background: #333;
         padding: 15px;
@@ -34,6 +35,7 @@
 
     .menu button:hover { background: #777; }
 
+    /* FORMULIEREN */
     .form {
         display: none;
         background: #2d2d2d;
@@ -61,6 +63,7 @@
         cursor: pointer;
     }
 
+    /* ZOEKFUNCTIE */
     #searchBox {
         width: 100%;
         padding: 12px;
@@ -70,36 +73,55 @@
         font-size: 16px;
     }
 
+    /* GROTE VIEWER */
+    #viewer {
+        width: 350px;
+        margin: 20px auto;
+        text-align: center;
+        display: none;
+    }
+
+    #viewer img {
+        width: 100%;
+        border-radius: 6px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    #viewer button {
+        margin: 10px 5px;
+        padding: 10px 15px;
+        background: #444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #viewer button:hover { background: #666; }
+
+    /* PLATENKAST */
     .platenkast {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 20px;
+        margin-top: 30px;
     }
 
-    .album-kaart { text-align: center; }
+    .album-kaart {
+        text-align: center;
+        cursor: pointer;
+    }
 
-    .flip-container { perspective: 1000px; }
-
-    .flipper {
-        position: relative;
+    .album-kaart img {
         width: 100%;
         aspect-ratio: 1/1;
-        transition: transform 0.8s;
-        transform-style: preserve-3d;
-    }
-
-    .flip-container:hover .flipper { transform: rotateY(180deg); }
-
-    .hoes {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        backface-visibility: hidden;
-        border-radius: 4px;
         object-fit: cover;
+        border-radius: 4px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     }
 
-    .achterkant { transform: rotateY(180deg); }
+    .titel { margin-top: 8px; font-weight: bold; }
+    .artiest { font-size: 0.9em; color: #bbb; }
 </style>
 </head>
 <body>
@@ -114,6 +136,16 @@
 
 <!-- ZOEKFUNCTIE -->
 <input id="searchBox" placeholder="Zoek op titel of artiest..." onkeyup="searchLPs()">
+
+<!-- GROTE VIEWER -->
+<div id="viewer">
+    <img id="viewerImg" src="">
+    <div>
+        <button onclick="showFront()">Voorkant</button>
+        <button onclick="showBack()">Achterkant</button>
+        <button onclick="closeViewer()">Sluiten</button>
+    </div>
+</div>
 
 <!-- LP TOEVOEGEN -->
 <div id="addForm" class="form">
@@ -136,7 +168,14 @@
 <div id="platenkast" class="platenkast"></div>
 
 <script>
-    let albums = [];
+    let albums = [
+        { titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg" },
+        { titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg" },
+        { titel: "Thriller", artiest: "Michael Jackson (1982)", front: "thriller-front.jpg", back: "thriller-back.jpg" }
+    ];
+
+    let currentFront = "";
+    let currentBack = "";
 
     function renderAlbums(filtered = null) {
         const kast = document.getElementById("platenkast");
@@ -146,13 +185,8 @@
 
         list.forEach((album, index) => {
             kast.innerHTML += `
-                <div class="album-kaart">
-                    <div class="flip-container">
-                        <div class="flipper">
-                            <img class="hoes" src="${album.front}">
-                            <img class="hoes achterkant" src="${album.back}">
-                        </div>
-                    </div>
+                <div class="album-kaart" onclick="openViewer('${album.front}', '${album.back}')">
+                    <img src="${album.front}">
                     <div class="titel">${album.titel}</div>
                     <div class="artiest">${album.artiest}</div>
                 </div>
@@ -207,12 +241,26 @@
         renderAlbums(filtered);
     }
 
-    // Voorbeeldalbums
-    albums = [
-        { titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg" },
-        { titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg" },
-        { titel: "Thriller", artiest: "Michael Jackson (1982)", front: "thriller-front.jpg", back: "thriller-back.jpg" }
-    ];
+    function openViewer(front, back) {
+        currentFront = front;
+        currentBack = back;
+
+        document.getElementById("viewerImg").src = front;
+        document.getElementById("viewer").style.display = "block";
+        window.scrollTo(0, 0);
+    }
+
+    function showFront() {
+        document.getElementById("viewerImg").src = currentFront;
+    }
+
+    function showBack() {
+        document.getElementById("viewerImg").src = currentBack;
+    }
+
+    function closeViewer() {
+        document.getElementById("viewer").style.display = "none";
+    }
 
     renderAlbums();
 </script>
