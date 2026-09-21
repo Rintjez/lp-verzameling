@@ -302,13 +302,16 @@
         }
     </style>
 </head>
+
+    <body>
+
     <h1>🎵 Mijn LP Collectie</h1>
 
     <!-- MENU -->
     <nav class="menu">
-        <button onclick="showForm('addForm')">LP toevoegen</button>
-        <button onclick="showForm('removeForm')">LP verwijderen</button>
-        <button onclick="showForm('editForm')">LP wijzigen</button>
+        <button onclick="showForm('addOverlay')">LP toevoegen</button>
+        <button onclick="showForm('removeOverlay')">LP verwijderen</button>
+        <button onclick="showForm('editOverlay')">LP wijzigen</button>
     </nav>
 
     <!-- ZOEKFUNCTIE -->
@@ -326,93 +329,104 @@
         </div>
     </section>
 
-    <!-- LP TOEVOEGEN -->
-    <div id="addForm" class="form">
-        <h3>Nieuwe LP toevoegen</h3>
-        <input id="titel" placeholder="Titel van album">
-        <input id="artiest" placeholder="Artiest (jaar)">
-        <input id="front" placeholder="Bestandsnaam voorkant (bijv. nieuwlp-front.jpg)">
-        <input id="back" placeholder="Bestandsnaam achterkant (bijv. nieuwlp-back.jpg)">
-        <input id="spotify" placeholder="Spotify link (optioneel)">
-        <input id="youtube" placeholder="YouTube link (optioneel)">
-        <button onclick="addLP()">Toevoegen</button>
+    <!-- LP TOEVOEGEN POPUP -->
+    <div id="addOverlay" class="form-overlay" onclick="closeFormsOnOuterClick(event)">
+        <div class="form">
+            <h3>Nieuwe LP toevoegen</h3>
+            <input id="titel" placeholder="Titel van album">
+            <input id="artiest" placeholder="Artiest (jaar)">
+            <input id="front" placeholder="Bestandsnaam voorkant (bijv. abbeyroad-front.jpg)">
+            <input id="back" placeholder="Bestandsnaam achterkant (optioneel)">
+            <input id="spotify" placeholder="Spotify link (optioneel)">
+            <input id="youtube" placeholder="YouTube link (optioneel)">
+            <div class="form-actions">
+                <button class="secondary" onclick="hideForms()">Annuleren</button>
+                <button onclick="addLP()">Toevoegen</button>
+            </div>
+        </div>
     </div>
 
-    <!-- LP VERWIJDEREN -->
-    <div id="removeForm" class="form">
-        <h3>LP verwijderen</h3>
-        <select id="removeSelect"></select>
-        <button onclick="removeLP()">Verwijderen</button>
+    <!-- LP VERWIJDEREN POPUP -->
+    <div id="removeOverlay" class="form-overlay" onclick="closeFormsOnOuterClick(event)">
+        <div class="form">
+            <h3>LP verwijderen</h3>
+            <select id="removeSelect"></select>
+            <div class="form-actions">
+                <button class="secondary" onclick="hideForms()">Annuleren</button>
+                <button onclick="removeLP()" style="background:#ef4444; color:white;">Verwijderen</button>
+            </div>
+        </div>
     </div>
 
-    <!-- LP WIJZIGEN -->
-    <div id="editForm" class="form">
-        <h3>LP wijzigen</h3>
-        <select id="editSelect" onchange="loadEditFields()"></select>
-        <input id="editTitel" placeholder="Nieuwe titel">
-        <input id="editArtiest" placeholder="Nieuwe artiest (jaar)">
-        <input id="editFront" placeholder="Nieuwe voorkant-bestandsnaam">
-        <input id="editBack" placeholder="Nieuwe achterkant-bestandsnaam">
-        <input id="editSpotify" placeholder="Nieuwe Spotify link">
-        <input id="editYouTube" placeholder="Nieuwe YouTube link">
-        <button onclick="editLP()">Opslaan</button>
+    <!-- LP WIJZIGEN POPUP -->
+    <div id="editOverlay" class="form-overlay" onclick="closeFormsOnOuterClick(event)">
+        <div class="form">
+            <h3>LP wijzigen</h3>
+            <select id="editSelect" onchange="loadEditFields()"></select>
+            <input id="editTitel" placeholder="Nieuwe titel">
+            <input id="editArtiest" placeholder="Nieuwe artiest (jaar)">
+            <input id="editFront" placeholder="Nieuwe voorkant-bestandsnaam">
+            <input id="editBack" placeholder="Nieuwe achterkant-bestandsnaam">
+            <input id="editSpotify" placeholder="Nieuwe Spotify link">
+            <input id="editYouTube" placeholder="Nieuwe YouTube link">
+            <div class="form-actions">
+                <button class="secondary" onclick="hideForms()">Annuleren</button>
+                <button onclick="editLP()">Opslaan</button>
+            </div>
+        </div>
     </div>
 
-    <!-- PLATENKAST -->
+    <!-- EXPORT ZONE VOOR GITHUB -->
+    <div id="exportArea" style="display:none; max-width:500px; margin:20px auto; background:rgba(0,0,0,0.5); padding:15px; border-radius:14px; border:1px solid var(--border-color);">
+        <p style="margin-top:0; color:var(--accent-color); font-size:0.9rem;">Kopieer de onderstaande tekst en plak deze in je <strong>albums.json</strong> op GitHub:</p>
+        <textarea id="jsonOutput" style="width:100%; height:120px; background:#000; color:#fff; font-family:monospace; border:1px solid var(--border-color); border-radius:8px; padding:10px; box-sizing:border-box; font-size:0.85rem;"></textarea>
+        <button onclick="document.getElementById('exportArea').style.display='none'" style="margin-top:10px; background:none; border:none; color:white; text-decoration:underline; cursor:pointer; font-size:0.85rem;">Sluiten</button>
+    </div>
+
+    <!-- PLATENKAST GRID -->
     <main id="platenkast"></main>
     <script>
-let albums = [
-    {
-        titel: "Abbey Road",
-        artiest: "The Beatles (1969)",
-        front: "abbeyroad-front.jpg",
-        back: "abbeyroad-back.jpg",
-        spotify: "https://spotify.com",
-        youtube: "https://youtube.com"
-    },
-    {
-        titel: "The Dark Side of the Moon",
-        artiest: "Pink Floyd (1973)",
-        front: "darkside-front.jpg",
-        back: "darkside-back.jpg",
-        spotify: "https://spotify.com",
-        youtube: "https://youtube.com"
-    },
-    {
-        titel: "Thriller",
-        artiest: "Michael Jackson (1982)",
-        front: "thriller-front.jpg",
-        back: "thriller-back.jpg",
-        spotify: "https://spotify.com",
-        youtube: "https://youtube.com"
-    }
-];
+let albums = [];
 
 let currentFront = "";
 let currentBack = "";
 let currentSpotify = "";
 let currentYouTube = "";
 
+// Haal de data live op uit albums.json op GitHub
+async function fetchAlbums() {
+    try {
+        const response = await fetch('albums.json');
+        albums = await response.json();
+        renderAlbums();
+    } catch (error) {
+        // Fallback als albums.json nog niet bestaat
+        albums = [
+            {titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg"},
+            {titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg"},
+            {titel: "Thriller", artiest: "Michael Jackson (1982)", front: "thriller-front.jpg", back: "thriller-back.jpg"}
+        ];
+        renderAlbums();
+    }
+}
+
 function renderAlbums(filtered = null) {
     const kast = document.getElementById("platenkast");
     kast.innerHTML = "";
     const list = filtered || albums;
 
-    for (let i = 0; i < list.length; i += 3) {
-        let plank = document.createElement("div");
-        plank.className = "plank";
-        
-        list.slice(i, i + 3).forEach(album => {
-            plank.innerHTML += `
-                <div class="album-kaart" onclick="openViewer('${album.front}', '${album.back}', '${album.spotify}', '${album.youtube}')">
+    list.forEach(album => {
+        kast.innerHTML += `
+            <div class="album-kaart" onclick="openViewer('${album.front}', '${album.back || album.front}', '${album.spotify || ''}', '${album.youtube || ''}')">
+                <div class="img-container">
                     <img src="${album.front}" alt="Hoes van ${album.titel}">
-                    <div class="titel" title="${album.titel}">${album.titel}</div>
-                    <div class="artiest" title="${album.artiest}">${album.artiest}</div>
+                    <div class="vinyl"></div>
                 </div>
-            `;
-        });
-        kast.appendChild(plank);
-    }
+                <div class="titel" title="${album.titel}">${album.titel}</div>
+                <div class="artiest" title="${album.artiest}">${album.artiest}</div>
+            </div>
+        `;
+    });
     updateSelectLists();
 }
 
@@ -428,18 +442,30 @@ function updateSelectLists() {
     });
 }
 
-function showForm(formId) {
+function showForm(overlayId) {
     hideForms();
-    document.getElementById(formId).style.display = "block";
-    if(formId === 'editForm') {
+    document.getElementById(overlayId).style.display = "flex";
+    if(overlayId === 'editOverlay') {
         loadEditFields();
     }
 }
 
 function hideForms() {
-    document.getElementById("addForm").style.display = "none";
-    document.getElementById("removeForm").style.display = "none";
-    document.getElementById("editForm").style.display = "none";
+    document.getElementById("addOverlay").style.display = "none";
+    document.getElementById("removeOverlay").style.display = "none";
+    document.getElementById("editOverlay").style.display = "none";
+}
+
+function closeFormsOnOuterClick(event) {
+    if (event.target.classList.contains('form-overlay')) {
+        hideForms();
+    }
+}
+
+function showExportWindow() {
+    document.getElementById("jsonOutput").value = JSON.stringify(albums, null, 2);
+    document.getElementById("exportArea").style.display = "block";
+    document.getElementById("jsonOutput").select();
 }
 
 function addLP() {
@@ -470,6 +496,7 @@ function addLP() {
     
     hideForms();
     renderAlbums();
+    showExportWindow();
 }
 
 function removeLP() {
@@ -479,6 +506,7 @@ function removeLP() {
     albums.splice(index, 1);
     hideForms();
     renderAlbums();
+    showExportWindow();
 }
 
 function loadEditFields() {
@@ -489,9 +517,9 @@ function loadEditFields() {
     document.getElementById("editTitel").value = album.titel;
     document.getElementById("editArtiest").value = album.artiest;
     document.getElementById("editFront").value = album.front;
-    document.getElementById("editBack").value = album.back;
-    document.getElementById("editSpotify").value = album.spotify;
-    document.getElementById("editYouTube").value = album.youtube;
+    document.getElementById("editBack").value = album.back || "";
+    document.getElementById("editSpotify").value = album.spotify || "";
+    document.getElementById("editYouTube").value = album.youtube || "";
 }
 
 function editLP() {
@@ -507,6 +535,7 @@ function editLP() {
     
     hideForms();
     renderAlbums();
+    showExportWindow();
 }
 
 function searchLPs() {
@@ -535,7 +564,7 @@ function openSpotify() { if (currentSpotify) window.open(currentSpotify, "_blank
 function openYouTube() { if (currentYouTube) window.open(currentYouTube, "_blank"); }
 function closeViewer() { document.getElementById("viewer").style.display = "none"; }
 
-renderAlbums();
+fetchAlbums();
 </script>
 </body>
 </html>
