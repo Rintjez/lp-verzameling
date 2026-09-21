@@ -99,12 +99,21 @@
 
     #viewer button:hover { background: #666; }
 
-    /* PLATENKAST */
-    .platenkast {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 20px;
+    /* PLANKEN */
+    #platenkast {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
         margin-top: 30px;
+    }
+
+    .plank {
+        display: flex;
+        gap: 20px;
+        padding: 15px;
+        background-color: #2d251e;
+        border-radius: 6px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
     }
 
     .album-kaart {
@@ -113,8 +122,8 @@
     }
 
     .album-kaart img {
-        width: 100%;
-        aspect-ratio: 1/1;
+        width: 140px;
+        height: 140px;
         object-fit: cover;
         border-radius: 4px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.4);
@@ -132,6 +141,7 @@
 <div class="menu">
     <button onclick="showAddForm()">LP toevoegen</button>
     <button onclick="showRemoveForm()">LP verwijderen</button>
+    <button onclick="showEditForm()">LP wijzigen</button>
 </div>
 
 <!-- ZOEKFUNCTIE -->
@@ -143,6 +153,8 @@
     <div>
         <button onclick="showFront()">Voorkant</button>
         <button onclick="showBack()">Achterkant</button>
+        <button onclick="openSpotify()">Spotify</button>
+        <button onclick="openYouTube()">YouTube</button>
         <button onclick="closeViewer()">Sluiten</button>
     </div>
 </div>
@@ -154,6 +166,8 @@
     <input id="artiest" placeholder="Artiest (jaar)">
     <input id="front" placeholder="Bestandsnaam voorkant (bijv. nieuwlp-front.jpg)">
     <input id="back" placeholder="Bestandsnaam achterkant (bijv. nieuwlp-back.jpg)">
+    <input id="spotify" placeholder="Spotify link (optioneel)">
+    <input id="youtube" placeholder="YouTube link (optioneel)">
     <button onclick="addLP()">Toevoegen</button>
 </div>
 
@@ -164,18 +178,54 @@
     <button onclick="removeLP()">Verwijderen</button>
 </div>
 
+<!-- LP WIJZIGEN -->
+<div id="editForm" class="form">
+    <h3>LP wijzigen</h3>
+    <select id="editSelect" onchange="loadEditFields()"></select>
+    <input id="editTitel" placeholder="Nieuwe titel">
+    <input id="editArtiest" placeholder="Nieuwe artiest (jaar)">
+    <input id="editFront" placeholder="Nieuwe voorkant-bestandsnaam">
+    <input id="editBack" placeholder="Nieuwe achterkant-bestandsnaam">
+    <input id="editSpotify" placeholder="Nieuwe Spotify link">
+    <input id="editYouTube" placeholder="Nieuwe YouTube link">
+    <button onclick="editLP()">Opslaan</button>
+</div>
+
 <!-- PLATENKAST -->
-<div id="platenkast" class="platenkast"></div>
+<div id="platenkast"></div>
 
 <script>
     let albums = [
-        { titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg" },
-        { titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg" },
-        { titel: "Thriller", artiest: "Michael Jackson (1982)", front: "thriller-front.jpg", back: "thriller-back.jpg" }
+        { 
+            titel: "Abbey Road",
+            artiest: "The Beatles (1969)",
+            front: "abbeyroad-front.jpg",
+            back: "abbeyroad-back.jpg",
+            spotify: "https://open.spotify.com/album/0ETFjACtuP2ADo6LFhL6HN",
+            youtube: "https://www.youtube.com/watch?v=45cYwDMibGo"
+        },
+        { 
+            titel: "The Dark Side of the Moon",
+            artiest: "Pink Floyd (1973)",
+            front: "darkside-front.jpg",
+            back: "darkside-back.jpg",
+            spotify: "https://open.spotify.com/album/4LH4d3cOWNNsVw41Gqt2kv",
+            youtube: "https://www.youtube.com/watch?v=DVQ3-xe_suY"
+        },
+        { 
+            titel: "Thriller",
+            artiest: "Michael Jackson (1982)",
+            front: "thriller-front.jpg",
+            back: "thriller-back.jpg",
+            spotify: "https://open.spotify.com/album/2ANVost0y2y52w9kXI7O2k",
+            youtube: "https://www.youtube.com/watch?v=sOnqjkJTMaA"
+        }
     ];
 
     let currentFront = "";
     let currentBack = "";
+    let currentSpotify = "";
+    let currentYouTube = "";
 
     function renderAlbums(filtered = null) {
         const kast = document.getElementById("platenkast");
@@ -183,50 +233,90 @@
 
         const list = filtered || albums;
 
-        list.forEach((album, index) => {
-            kast.innerHTML += `
-                <div class="album-kaart" onclick="openViewer('${album.front}', '${album.back}')">
-                    <img src="${album.front}">
-                    <div class="titel">${album.titel}</div>
-                    <div class="artiest">${album.artiest}</div>
-                </div>
-            `;
-        });
+        for (let i = 0; i < list.length; i += 3) {
+            let plank = document.createElement("div");
+            plank.className = "plank";
 
-        updateRemoveList();
+            list.slice(i, i + 3).forEach(album => {
+                plank.innerHTML += `
+                    <div class="album-kaart"
+                        onclick="openViewer('${album.front}', '${album.back}', '${album.spotify}', '${album.youtube}')">
+                        <img src="${album.front}">
+                        <div class="titel">${album.titel}</div>
+                        <div class="artiest">${album.artiest}</div>
+                    </div>
+                `;
+            });
+
+            kast.appendChild(plank);
+        }
+
+        updateSelectLists();
     }
 
-    function updateRemoveList() {
-        const select = document.getElementById("removeSelect");
-        select.innerHTML = "";
+    function updateSelectLists() {
+        const removeSel = document.getElementById("removeSelect");
+        const editSel = document.getElementById("editSelect");
+
+        removeSel.innerHTML = "";
+        editSel.innerHTML = "";
+
         albums.forEach((album, index) => {
-            select.innerHTML += `<option value="${index}">${album.titel}</option>`;
+            removeSel.innerHTML += `<option value="${index}">${album.titel}</option>`;
+            editSel.innerHTML += `<option value="${index}">${album.titel}</option>`;
         });
     }
 
-    function showAddForm() {
-        document.getElementById("addForm").style.display = "block";
-        document.getElementById("removeForm").style.display = "none";
-    }
+    function showAddForm() { hideForms(); document.getElementById("addForm").style.display = "block"; }
+    function showRemoveForm() { hideForms(); document.getElementById("removeForm").style.display = "block"; }
+    function showEditForm() { hideForms(); document.getElementById("editForm").style.display = "block"; loadEditFields(); }
 
-    function showRemoveForm() {
-        document.getElementById("removeForm").style.display = "block";
+    function hideForms() {
         document.getElementById("addForm").style.display = "none";
+        document.getElementById("removeForm").style.display = "none";
+        document.getElementById("editForm").style.display = "none";
     }
 
     function addLP() {
-        const titel = document.getElementById("titel").value;
-        const artiest = document.getElementById("artiest").value;
-        const front = document.getElementById("front").value;
-        const back = document.getElementById("back").value;
-
-        albums.push({ titel, artiest, front, back });
+        albums.push({
+            titel: document.getElementById("titel").value,
+            artiest: document.getElementById("artiest").value,
+            front: document.getElementById("front").value,
+            back: document.getElementById("back").value,
+            spotify: document.getElementById("spotify").value,
+            youtube: document.getElementById("youtube").value
+        });
         renderAlbums();
     }
 
     function removeLP() {
         const index = document.getElementById("removeSelect").value;
         albums.splice(index, 1);
+        renderAlbums();
+    }
+
+    function loadEditFields() {
+        const index = document.getElementById("editSelect").value;
+        const album = albums[index];
+
+        document.getElementById("editTitel").value = album.titel;
+        document.getElementById("editArtiest").value = album.artiest;
+        document.getElementById("editFront").value = album.front;
+        document.getElementById("editBack").value = album.back;
+        document.getElementById("editSpotify").value = album.spotify;
+        document.getElementById("editYouTube").value = album.youtube;
+    }
+
+    function editLP() {
+        const index = document.getElementById("editSelect").value;
+
+        albums[index].titel = document.getElementById("editTitel").value;
+        albums[index].artiest = document.getElementById("editArtiest").value;
+        albums[index].front = document.getElementById("editFront").value;
+        albums[index].back = document.getElementById("editBack").value;
+        albums[index].spotify = document.getElementById("editSpotify").value;
+        albums[index].youtube = document.getElementById("editYouTube").value;
+
         renderAlbums();
     }
 
@@ -241,21 +331,26 @@
         renderAlbums(filtered);
     }
 
-    function openViewer(front, back) {
+    function openViewer(front, back, spotify, youtube) {
         currentFront = front;
         currentBack = back;
+        currentSpotify = spotify;
+        currentYouTube = youtube;
 
         document.getElementById("viewerImg").src = front;
         document.getElementById("viewer").style.display = "block";
         window.scrollTo(0, 0);
     }
 
-    function showFront() {
-        document.getElementById("viewerImg").src = currentFront;
+    function showFront() { document.getElementById("viewerImg").src = currentFront; }
+    function showBack() { document.getElementById("viewerImg").src = currentBack; }
+
+    function openSpotify() {
+        if (currentSpotify) window.open(currentSpotify, "_blank");
     }
 
-    function showBack() {
-        document.getElementById("viewerImg").src = currentBack;
+    function openYouTube() {
+        if (currentYouTube) window.open(currentYouTube, "_blank");
     }
 
     function closeViewer() {
