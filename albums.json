@@ -1,0 +1,26 @@
+[
+  {
+    "titel": "Abbey Road",
+    "artiest": "The Beatles (1969)",
+    "front": "abbeyroad-front.jpg",
+    "back": "abbeyroad-back.jpg",
+    "spotify": "https://spotify.com",
+    "youtube": "https://youtube.com"
+  },
+  {
+    "titel": "The Dark Side of the Moon",
+    "artiest": "Pink Floyd (1973)",
+    "front": "darkside-front.jpg",
+    "back": "darkside-back.jpg",
+    "spotify": "https://spotify.com",
+    "youtube": "https://youtube.com"
+  },
+  {
+    "titel": "Thriller",
+    "artiest": "Michael Jackson (1982)",
+    "front": "thriller-front.jpg",
+    "back": "thriller-back.jpg",
+    "spotify": "https://spotify.com",
+    "youtube": "https://youtube.com"
+  }
+]
