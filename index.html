@@ -12,7 +12,7 @@
             --bg-color: #0a0a0c;
             --surface-color: #16161a;
             --surface-hover: #222227;
-            --accent-color: #1db954; /* Spotify Groen */
+            --accent-color: #1db954;
             --text-main: #ffffff;
             --text-muted: #94a3b8;
             --glass-bg: rgba(22, 22, 26, 0.7);
@@ -37,7 +37,7 @@
             margin-bottom: 35px;
         }
         
-        /* COCKPIT / MENU */
+        /* MENU */
         .menu {
             display: flex;
             gap: 10px;
@@ -61,6 +61,52 @@
             background: var(--text-main);
             color: var(--bg-color);
             transform: translateY(-1px);
+        }
+        
+        /* CONTROLS (ZOEKEN + SORTEREN) */
+        .search-sort-container {
+            display: flex;
+            gap: 15px;
+            max-width: 650px;
+            margin: 0 auto 40px auto;
+            width: 100%;
+        }
+
+        #searchBox {
+            flex: 2;
+            padding: 14px 24px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            background: var(--surface-color);
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        #searchBox:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.2);
+            background: var(--surface-hover);
+        }
+
+        #sortBox {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            background: var(--surface-color);
+            color: white;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        #sortBox:focus { outline: none; }
+
+        @media (max-width: 480px) {
+            .search-sort-container { flex-direction: column; gap: 10px; }
         }
         
         /* FLOATING FORMS (MODALS) */
@@ -104,90 +150,27 @@
             transition: all 0.2s;
         }
 
-        .form input:focus, .form select:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
+        .form input:focus, .form select:focus { outline: none; border-color: var(--accent-color); }
 
         .form-actions { display: flex; gap: 10px; margin-top: 10px; }
 
         .form button {
-            padding: 14px;
-            flex: 1;
-            background: var(--accent-color);
-            color: black;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 14px; flex: 1; background: var(--accent-color); color: black; border: none; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s;
         }
 
-        .form button.secondary {
-            background: rgba(255,255,255,0.08);
-            color: white;
-        }
-
+        .form button.secondary { background: rgba(255,255,255,0.08); color: white; }
         .form button:hover { opacity: 0.9; transform: translateY(-1px); }
-        
-        /* ZOEKBALK */
-        #searchBox {
-            width: 100%;
-            max-width: 500px;
-            display: block;
-            margin: 0 auto 40px auto;
-            padding: 14px 24px;
-            border-radius: 30px;
-            border: 1px solid var(--border-color);
-            background: var(--surface-color);
-            color: white;
-            font-size: 1rem;
-            box-sizing: border-box;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        #searchBox:focus {
-            outline: none;
-            border-color: rgba(255,255,255,0.2);
-            background: var(--surface-hover);
-        }
         
         /* DETAILED ALBUM VIEWER */
         #viewer {
-            width: 100%;
-            max-width: 420px;
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            padding: 24px;
-            border-radius: 24px;
-            margin: 0 auto 40px auto;
-            text-align: center;
-            display: none;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            width: 100%; max-width: 420px; background: var(--surface-color); border: 1px solid var(--border-color); padding: 24px; border-radius: 24px; margin: 0 auto 40px auto; text-align: center; display: none; box-shadow: 0 30px 60px rgba(0,0,0,0.6);
         }
 
-        #viewer img {
-            width: 100%;
-            aspect-ratio: 1/1;
-            object-fit: cover;
-            border-radius: 16px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.5);
-        }
-
+        #viewer img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 16px; box-shadow: 0 12px 35px rgba(0,0,0,0.5); }
         .viewer-buttons { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
         #viewer button {
-            padding: 12px;
-            background: rgba(255,255,255,0.05);
-            color: white;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            padding: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;
         }
 
         #viewer button:hover { background: rgba(255,255,255,0.12); }
@@ -198,112 +181,38 @@
         /* PLATENKAST GRID SYSTEM */
         #platenkast {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 40px 30px;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 40px 25px;
             max-width: 1100px;
             margin: 40px auto 0 auto;
         }
 
         /* VINYL ANIMATIE EFFECT */
-        .album-wrapper {
-            position: relative;
-            width: 160px;
-            margin: 0 auto;
-        }
-
-        .album-kaart {
-            text-align: center;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .img-container {
-            position: relative;
-            width: 160px;
-            height: 160px;
-            margin: 0 auto;
-        }
-
+        .album-kaart { text-align: center; cursor: pointer; position: relative; }
+        .img-container { position: relative; width: 160px; height: 160px; margin: 0 auto; }
         .album-kaart img {
-            width: 160px;
-            height: 160px;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            position: relative;
-            z-index: 3;
-            background: #222;
-            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 160px; height: 160px; object-fit: cover; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; z-index: 3; background: #222; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* De verborgen vinylplaat */
         .vinyl {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 156px;
-            height: 156px;
-            background: radial-gradient(circle, #2d2d2d 4px, #111 5px, #111 20px, #000 21px, #111 22px, #000 100%);
-            border-radius: 50%;
-            z-index: 1;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateX(0px) rotate(0deg);
+            position: absolute; top: 2px; left: 2px; width: 156px; height: 156px; background: radial-gradient(circle, #2d2d2d 4px, #111 5px, #111 20px, #000 21px, #111 22px, #000 100%); border-radius: 50%; z-index: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(0px) rotate(0deg);
         }
 
-        /* Vinyl middellabel detail */
-        .vinyl::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 35px; height: 35px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0.8;
-        }
-
-        /* Hover effecten */
-        .album-kaart:hover img {
-            transform: translateX(-20px);
-        }
-
-        .album-kaart:hover .vinyl {
-            transform: translateX(35px) rotate(360deg);
-        }
+        .vinyl::after { content: ''; position: absolute; top: 50%; left: 50%; width: 35px; height: 35px; background: var(--accent-color); border-radius: 50%; transform: translate(-50%, -50%); opacity: 0.8; }
+        .album-kaart:hover img { transform: translateX(-20px); }
+        .album-kaart:hover .vinyl { transform: translateX(35px) rotate(360deg); }
 
         @keyframes spin {
             from { transform: translateX(35px) rotate(0deg); }
             to { transform: translateX(35px) rotate(360deg); }
         }
 
-        /* Als de animatie eenmaal uitgeschoven is, blijft hij oneindig zachtjes doordraaien */
-        .album-kaart:hover .vinyl {
-            animation: spin 6s linear infinite;
-            animation-delay: 0.35s;
-        }
-
-        .titel {
-            margin-top: 15px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .artiest {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 3px;
-        }
+        .album-kaart:hover .vinyl { animation: spin 6s linear infinite; animation-delay: 0.35s; }
+        .titel { margin-top: 15px; font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .artiest { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
     </style>
 </head>
-
-    <body>
+<body>
 
     <h1>🎵 Mijn LP Collectie</h1>
 
@@ -314,8 +223,16 @@
         <button onclick="showForm('editOverlay')">LP wijzigen</button>
     </nav>
 
-    <!-- ZOEKFUNCTIE -->
-    <input id="searchBox" placeholder="Zoek een LP in je kast..." onkeyup="searchLPs()">
+    <!-- ZOEKEN EN SORTEREN CONTROLS -->
+    <div class="search-sort-container">
+        <input id="searchBox" placeholder="Zoek een LP in je kast..." onkeyup="searchLPs()">
+        <select id="sortBox" onchange="searchLPs()">
+            <option value="titelAZ">Titel (A-Z)</option>
+            <option value="artiestAZ">Artiest (A-Z)</option>
+            <option value="jaarNieuw">Jaar (Nieuwste)</option>
+            <option value="jaarOud">Jaar (Oudste)</option>
+        </select>
+    </div>
 
     <!-- GROTE VIEWER -->
     <section id="viewer">
@@ -385,6 +302,7 @@
 
     <!-- PLATENKAST GRID -->
     <main id="platenkast"></main>
+
     <script>
 let albums = [];
 
@@ -393,27 +311,24 @@ let currentBack = "";
 let currentSpotify = "";
 let currentYouTube = "";
 
-// Haal de data live op uit albums.json op GitHub
 async function fetchAlbums() {
     try {
         const response = await fetch('albums.json');
         albums = await response.json();
-        renderAlbums();
+        searchLPs();
     } catch (error) {
-        // Fallback als albums.json nog niet bestaat
         albums = [
             {titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg"},
             {titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg"},
             {titel: "Thriller", artiest: "Michael Jackson (1982)", front: "thriller-front.jpg", back: "thriller-back.jpg"}
         ];
-        renderAlbums();
+        searchLPs();
     }
 }
 
-function renderAlbums(filtered = null) {
+function renderAlbums(list) {
     const kast = document.getElementById("platenkast");
     kast.innerHTML = "";
-    const list = filtered || albums;
 
     list.forEach(album => {
         kast.innerHTML += `
@@ -495,7 +410,7 @@ function addLP() {
     document.getElementById("youtube").value = "";
     
     hideForms();
-    renderAlbums();
+    searchLPs();
     showExportWindow();
 }
 
@@ -505,7 +420,7 @@ function removeLP() {
     
     albums.splice(index, 1);
     hideForms();
-    renderAlbums();
+    searchLPs();
     showExportWindow();
 }
 
@@ -534,25 +449,42 @@ function editLP() {
     albums[index].youtube = document.getElementById("editYouTube").value;
     
     hideForms();
-    renderAlbums();
+    searchLPs();
     showExportWindow();
+}
+
+function extractYear(artistString) {
+    const match = artistString.match(/\((\d{4})\)/);
+    return match ? parseInt(match[1]) : 0;
 }
 
 function searchLPs() {
     const q = document.getElementById("searchBox").value.toLowerCase();
-    const filtered = albums.filter(album => 
+    const sortMethod = document.getElementById("sortBox").value;
+    
+    let filtered = albums.filter(album => 
         album.titel.toLowerCase().includes(q) || 
         album.artiest.toLowerCase().includes(q)
     );
+
+    filtered.sort((a, b) => {
+        if (sortMethod === "titelAZ") {
+            return a.titel.localeCompare(b.titel);
+        } else if (sortMethod === "artiestAZ") {
+            return a.artiest.localeCompare(b.artiest);
+        } else if (sortMethod === "jaarNieuw") {
+            return extractYear(b.artiest) - extractYear(a.artiest);
+        } else if (sortMethod === "jaarOud") {
+            return extractYear(a.artiest) - extractYear(b.artiest);
+        }
+        return 0;
+    });
+
     renderAlbums(filtered);
 }
 
 function openViewer(front, back, spotify, youtube) {
-    currentFront = front;
-    currentBack = back;
-    currentSpotify = spotify;
-    currentYouTube = youtube;
-    
+    currentFront = front; currentBack = back; currentSpotify = spotify; currentYouTube = youtube;
     document.getElementById("viewerImg").src = front;
     document.getElementById("viewer").style.display = "block";
     window.scrollTo({ top: 0, behavior: 'smooth' });
