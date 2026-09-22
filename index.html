@@ -297,21 +297,30 @@
     <!-- PLATENKAST GRID -->
     <main id="platenkast"></main>
     <script>
-// PLAK HIERONDER JOUW SHEETDB-LINK (bijvoorbeeld: https://sheetdb.io)
+// Jouw unieke SheetDB-link is nu succesvol gekoppeld!
 const sheetdbUrl = "https://sheetdb.io/api/v1/ag8w9tuv0663h";
 
 let albums = [];
 let currentFront = "", currentBack = "", currentSpotify = "", currentYouTube = "";
 
-// Haal de data live op uit Google Sheets
+// Haal de data live op uit jouw Google Sheet
 async function fetchAlbums() {
     try {
         const response = await fetch(sheetdbUrl);
         if (!response.ok) throw new Error();
         albums = await response.json();
+        
+        // Als de Google Sheet nog helemaal leeg is (of geen data bevat), laden we de test-albums als opstart-hulp
+        if (albums.length === 0) {
+            albums = [
+                {titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg"},
+                {titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg"},
+                {titel: "Thriller", artiest: "Michael Jackson (1982)", front: "thriller-front.jpg", back: "thriller-back.jpg"}
+            ];
+        }
         searchLPs();
     } catch (error) {
-        // Fallback-lijst als de Google Sheet nog helemaal leeg is
+        // Fallback als de database-verbinding mislukt
         albums = [
             {titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg"},
             {titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg"}
@@ -366,7 +375,7 @@ function closeFormsOnOuterClick(event) {
     if (event.target.classList.contains('form-overlay')) hideForms();
 }
 
-// Volautomatisch toevoegen aan Google Sheets
+// Volautomatisch toevoegen aan je Google Sheet
 async function addLP() {
     const titelVal = document.getElementById("titel").value;
     const artiestVal = document.getElementById("artiest").value;
@@ -405,13 +414,12 @@ async function addLP() {
         alert("Fout bij het verbinden met de database: " + err.message);
     }
 
-    // Velden leegmaken
     document.getElementById("titel").value = ""; document.getElementById("artiest").value = "";
     document.getElementById("front").value = ""; document.getElementById("back").value = "";
     document.getElementById("spotify").value = ""; document.getElementById("youtube").value = "";
 }
 
-// Volautomatisch verwijderen uit Google Sheets
+// Volautomatisch verwijderen uit je Google Sheet
 async function removeLP() {
     const index = document.getElementById("removeSelect").value;
     if(index === "") return;
@@ -420,7 +428,6 @@ async function removeLP() {
     hideForms();
 
     try {
-        // Verwijdert de rij uit Google Sheets op basis van de albumtitel
         const response = await fetch(`${sheetdbUrl}/titel/${encodeURIComponent(albumTitel)}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
@@ -450,7 +457,7 @@ function loadEditFields() {
     document.getElementById("editYouTube").value = album.youtube || "";
 }
 
-// Volautomatisch aanpassen in Google Sheets
+// Volautomatisch aanpassen in je Google Sheet
 async function editLP() {
     const index = document.getElementById("editSelect").value;
     if (index === "" || !albums[index]) return;
