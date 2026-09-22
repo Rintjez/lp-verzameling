@@ -300,34 +300,46 @@
 let albums = [];
 let currentFront = "", currentBack = "", currentSpotify = "", currentYouTube = "";
 
-// GitHub Configuratie inladen uit browsergeheugen
 let ghUser = localStorage.getItem("gh_user") || "";
 let ghRepo = localStorage.getItem("gh_repo") || "";
 let ghToken = localStorage.getItem("gh_token") || "";
 
-// Start met inladen van live gegevens
 async function fetchAlbums() {
+    // Probeer eerst live data van GitHub Pages te halen, anders via de directe API om lokaal bruikbaar te zijn
+    let fetchUrl = 'albums.json?t=' + new Date().getTime();
+    if (window.location.protocol === 'file:' && ghUser && ghRepo) {
+        fetchUrl = `https://github.com{ghUser}/${ghRepo}/contents/albums.json`;
+    }
+
     try {
-        const response = await fetch('albums.json?t=' + new Date().getTime());
+        const response = await fetch(fetchUrl, fetchUrl.includes('://github.com') ? {
+            headers: ghToken ? { "Authorization": `token ${ghToken}` } : {}
+        } : {});
+        
         if (!response.ok) throw new Error();
-        albums = await response.json();
+        
+        let data = await response.json();
+        if (fetchUrl.includes('://github.com')) {
+            albums = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+        } else {
+            albums = data;
+        }
         searchLPs();
     } catch (error) {
-        // Standaard reserve-lijst als albums.json (nog) niet bestaat op GitHub
         albums = [
             {titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg"},
             {titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg"},
+            {titel: "Thriller", artiest: "Michael Jackson (1982)", front: "thriller-front.jpg", back: "thriller-back.jpg"}
         ];
         searchLPs();
     }
 }
 
-// Volautomatische push naar je GitHub repository
 async function saveToGitHub() {
     if (!ghUser || !ghRepo || !ghToken) {
         const userPrompt = prompt("Geef je GitHub gebruikersnaam:");
-        const repoPrompt = prompt("Geef de exacte naam van je GitHub map (bijv: dinsdag tennis):");
-        const tokenPrompt = prompt("Plak hier je geheime GitHub Personal Access Token (Classic met 'repo' vinkje):");
+        const repoPrompt = prompt("Geef de exacte naam van je GitHub map (bijv: lp-verzameling):");
+        const tokenPrompt = prompt("Plak hier je geheime GitHub Personal Access Token (beginnend met ghp_):");
         
         if (userPrompt && repoPrompt && tokenPrompt) {
             ghUser = userPrompt.trim(); 
@@ -337,7 +349,7 @@ async function saveToGitHub() {
             localStorage.setItem("gh_repo", ghRepo);
             localStorage.setItem("gh_token", ghToken);
         } else {
-            alert("Opslaan geannuleerd. GitHub gegevens zijn verplicht voor automatische synchronisatie.");
+            alert("Opslaan geannuleerd. Gegevens zijn verplicht.");
             return;
         }
     }
@@ -345,21 +357,25 @@ async function saveToGitHub() {
     const url = `https://github.com{ghUser}/${ghRepo}/contents/albums.json`;
     
     try {
-        // 1. SHA-hash opvragen van het bestand (Verplicht voor overschrijven binnen GitHub API)
         const getRes = await fetch(url, {
-            headers: { "Authorization": `token ${ghToken}` }
+            method: "GET",
+            headers: { 
+                "Authorization": `token ${ghToken}`,
+                "Accept": "application/vnd.github.v3+json"
+            }
         });
+        
         let sha = "";
         if (getRes.ok) {
             const getData = await getRes.json();
             sha = getData.sha;
         }
 
-        // 2. Data omzetten en direct pushen naar GitHub
         const putRes = await fetch(url, {
             method: "PUT",
             headers: {
                 "Authorization": `token ${ghToken}`,
+                "Accept": "application/vnd.github.v3+json",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -370,7 +386,8 @@ async function saveToGitHub() {
         });
 
         if (putRes.ok) {
-            alert("Volautomatisch opgeslagen op GitHub! Het kan 1 à 2 minuten duren voordat GitHub Pages de updates verwerkt heeft.");
+            alert("Volautomatisch opgeslagen op GitHub! Het kan 1 à 2 minuten duren voordat de updates zichtbaar zijn.");
+            fetchAlbums();
         } else {
             const errData = await putRes.json();
             alert("GitHub foutmelding: " + errData.message);
@@ -383,7 +400,6 @@ async function saveToGitHub() {
 function renderAlbums(list) {
     const kast = document.getElementById("platenkast");
     kast.innerHTML = "";
-
     list.forEach(album => {
         kast.innerHTML += `
             <div class="album-kaart" onclick="openViewer('${album.front}', '${album.back || album.front}', '${album.spotify || ''}', '${album.youtube || ''}')">
@@ -403,7 +419,6 @@ function updateSelectLists() {
     const removeSel = document.getElementById("removeSelect");
     const editSel = document.getElementById("editSelect");
     removeSel.innerHTML = ""; editSel.innerHTML = "";
-    
     albums.forEach((album, index) => {
         removeSel.innerHTML += `<option value="${index}">${album.titel}</option>`;
         editSel.innerHTML += `<option value="${index}">${album.titel}</option>`;
@@ -427,12 +442,11 @@ function closeFormsOnOuterClick(event) {
 }
 
 function clearGitHubSettings() {
-    if(confirm("Weet je zeker dat je je opgeslagen GitHub inloggegevens en token wilt wissen van dit apparaat?")) {
-        localStorage.removeItem("gh_user");
-        localStorage.removeItem("gh_repo");
-        localStorage.removeItem("gh_token");
+    if(confirm("Weet je zeker dat je je opgeslagen GitHub inloggegevens wilt wissen?")) {
+        localStorage.clear();
         ghUser = ""; ghRepo = ""; ghToken = "";
         alert("Gegevens gewist.");
+        location.reload();
     }
 }
 
@@ -440,25 +454,19 @@ function addLP() {
     const titelVal = document.getElementById("titel").value;
     const artiestVal = document.getElementById("artiest").value;
     const frontVal = document.getElementById("front").value;
-    
     if(!titelVal || !artiestVal || !frontVal) {
-        alert("Vul ten minste een titel, artiest en voorkant-afbeelding in!");
+        alert("Vul ten minste een titel, artiest en voorkant in!");
         return;
     }
-
     albums.push({
-        titel: titelVal,
-        artiest: artiestVal,
-        front: frontVal,
+        titel: titelVal, artiest: artiestVal, front: frontVal,
         back: document.getElementById("back").value || frontVal,
         spotify: document.getElementById("spotify").value,
         youtube: document.getElementById("youtube").value
     });
-    
     document.getElementById("titel").value = ""; document.getElementById("artiest").value = "";
     document.getElementById("front").value = ""; document.getElementById("back").value = "";
     document.getElementById("spotify").value = ""; document.getElementById("youtube").value = "";
-    
     hideForms();
     searchLPs();
     saveToGitHub();
@@ -467,7 +475,6 @@ function addLP() {
 function removeLP() {
     const index = document.getElementById("removeSelect").value;
     if(index === "") return;
-    
     albums.splice(index, 1);
     hideForms();
     searchLPs();
@@ -477,7 +484,6 @@ function removeLP() {
 function loadEditFields() {
     const index = document.getElementById("editSelect").value;
     if (index === "" || !albums[index]) return;
-    
     const album = albums[index];
     document.getElementById("editTitel").value = album.titel;
     document.getElementById("editArtiest").value = album.artiest;
@@ -490,14 +496,12 @@ function loadEditFields() {
 function editLP() {
     const index = document.getElementById("editSelect").value;
     if (index === "" || !albums[index]) return;
-    
     albums[index].titel = document.getElementById("editTitel").value;
     albums[index].artiest = document.getElementById("editArtiest").value;
     albums[index].front = document.getElementById("editFront").value;
     albums[index].back = document.getElementById("editBack").value;
     albums[index].spotify = document.getElementById("editSpotify").value;
     albums[index].youtube = document.getElementById("editYouTube").value;
-    
     hideForms();
     searchLPs();
     saveToGitHub();
@@ -505,18 +509,13 @@ function editLP() {
 
 function extractYear(artistString) {
     const match = artistString.match(/\((\d{4})\)/);
-    return match ? parseInt(match[1]) : 0;
+    return match ? parseInt(match) : 0;
 }
 
 function searchLPs() {
     const q = document.getElementById("searchBox").value.toLowerCase();
     const sortMethod = document.getElementById("sortBox").value;
-    
-    let filtered = albums.filter(album => 
-        album.titel.toLowerCase().includes(q) || 
-        album.artiest.toLowerCase().includes(q)
-    );
-
+    let filtered = albums.filter(album => album.titel.toLowerCase().includes(q) || album.artiest.toLowerCase().includes(q));
     filtered.sort((a, b) => {
         if (sortMethod === "titelAZ") return a.titel.localeCompare(b.titel);
         if (sortMethod === "artiestAZ") return a.artiest.localeCompare(b.artiest);
@@ -524,7 +523,6 @@ function searchLPs() {
         if (sortMethod === "jaarOud") return extractYear(a.artiest) - extractYear(b.artiest);
         return 0;
     });
-
     renderAlbums(filtered);
 }
 
