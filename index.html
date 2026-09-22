@@ -297,109 +297,33 @@
     <!-- PLATENKAST GRID -->
     <main id="platenkast"></main>
     <script>
+// PLAK HIERONDER JOUW SHEETDB-LINK (bijvoorbeeld: https://sheetdb.io)
+const sheetdbUrl = "https://sheetdb.io/api/v1/ag8w9tuv0663h";
+
 let albums = [];
 let currentFront = "", currentBack = "", currentSpotify = "", currentYouTube = "";
 
-let ghUser = localStorage.getItem("gh_user") || "";
-let ghRepo = localStorage.getItem("gh_repo") || "";
-let ghToken = localStorage.getItem("gh_token") || "";
-
+// Haal de data live op uit Google Sheets
 async function fetchAlbums() {
-    // Probeer eerst live data van GitHub Pages te halen, anders via de directe API om lokaal bruikbaar te zijn
-    let fetchUrl = 'albums.json?t=' + new Date().getTime();
-    if (window.location.protocol === 'file:' && ghUser && ghRepo) {
-        fetchUrl = `https://github.com{ghUser}/${ghRepo}/contents/albums.json`;
-    }
-
     try {
-        const response = await fetch(fetchUrl, fetchUrl.includes('://github.com') ? {
-            headers: ghToken ? { "Authorization": `token ${ghToken}` } : {}
-        } : {});
-        
+        const response = await fetch(sheetdbUrl);
         if (!response.ok) throw new Error();
-        
-        let data = await response.json();
-        if (fetchUrl.includes('://github.com')) {
-            albums = JSON.parse(decodeURIComponent(escape(atob(data.content))));
-        } else {
-            albums = data;
-        }
+        albums = await response.json();
         searchLPs();
     } catch (error) {
+        // Fallback-lijst als de Google Sheet nog helemaal leeg is
         albums = [
             {titel: "Abbey Road", artiest: "The Beatles (1969)", front: "abbeyroad-front.jpg", back: "abbeyroad-back.jpg"},
-            {titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg"},
-            {titel: "Thriller", artiest: "Michael Jackson (1982)", front: "thriller-front.jpg", back: "thriller-back.jpg"}
+            {titel: "The Dark Side of the Moon", artiest: "Pink Floyd (1973)", front: "darkside-front.jpg", back: "darkside-back.jpg"}
         ];
         searchLPs();
-    }
-}
-
-async function saveToGitHub() {
-    if (!ghUser || !ghRepo || !ghToken) {
-        const userPrompt = prompt("Geef je GitHub gebruikersnaam:");
-        const repoPrompt = prompt("Geef de exacte naam van je GitHub map (bijv: lp-verzameling):");
-        const tokenPrompt = prompt("Plak hier je geheime GitHub Personal Access Token (beginnend met ghp_):");
-        
-        if (userPrompt && repoPrompt && tokenPrompt) {
-            ghUser = userPrompt.trim(); 
-            ghRepo = repoPrompt.trim(); 
-            ghToken = tokenPrompt.trim();
-            localStorage.setItem("gh_user", ghUser);
-            localStorage.setItem("gh_repo", ghRepo);
-            localStorage.setItem("gh_token", ghToken);
-        } else {
-            alert("Opslaan geannuleerd. Gegevens zijn verplicht.");
-            return;
-        }
-    }
-
-    const url = `https://github.com{ghUser}/${ghRepo}/contents/albums.json`;
-    
-    try {
-        const getRes = await fetch(url, {
-            method: "GET",
-            headers: { 
-                "Authorization": `token ${ghToken}`,
-                "Accept": "application/vnd.github.v3+json"
-            }
-        });
-        
-        let sha = "";
-        if (getRes.ok) {
-            const getData = await getRes.json();
-            sha = getData.sha;
-        }
-
-        const putRes = await fetch(url, {
-            method: "PUT",
-            headers: {
-                "Authorization": `token ${ghToken}`,
-                "Accept": "application/vnd.github.v3+json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: "Platenkast automatisch bijgewerkt",
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(albums, null, 2)))),
-                sha: sha
-            })
-        });
-
-        if (putRes.ok) {
-            alert("Volautomatisch opgeslagen op GitHub! Het kan 1 à 2 minuten duren voordat de updates zichtbaar zijn.");
-            fetchAlbums();
-        } else {
-            const errData = await putRes.json();
-            alert("GitHub foutmelding: " + errData.message);
-        }
-    } catch (err) {
-        alert("Fout bij het verbinden met GitHub: " + err.message);
     }
 }
 
 function renderAlbums(list) {
     const kast = document.getElementById("platenkast");
     kast.innerHTML = "";
+
     list.forEach(album => {
         kast.innerHTML += `
             <div class="album-kaart" onclick="openViewer('${album.front}', '${album.back || album.front}', '${album.spotify || ''}', '${album.youtube || ''}')">
@@ -419,6 +343,7 @@ function updateSelectLists() {
     const removeSel = document.getElementById("removeSelect");
     const editSel = document.getElementById("editSelect");
     removeSel.innerHTML = ""; editSel.innerHTML = "";
+    
     albums.forEach((album, index) => {
         removeSel.innerHTML += `<option value="${index}">${album.titel}</option>`;
         editSel.innerHTML += `<option value="${index}">${album.titel}</option>`;
@@ -441,49 +366,81 @@ function closeFormsOnOuterClick(event) {
     if (event.target.classList.contains('form-overlay')) hideForms();
 }
 
-function clearGitHubSettings() {
-    if(confirm("Weet je zeker dat je je opgeslagen GitHub inloggegevens wilt wissen?")) {
-        localStorage.clear();
-        ghUser = ""; ghRepo = ""; ghToken = "";
-        alert("Gegevens gewist.");
-        location.reload();
-    }
-}
-
-function addLP() {
+// Volautomatisch toevoegen aan Google Sheets
+async function addLP() {
     const titelVal = document.getElementById("titel").value;
     const artiestVal = document.getElementById("artiest").value;
     const frontVal = document.getElementById("front").value;
+    
     if(!titelVal || !artiestVal || !frontVal) {
         alert("Vul ten minste een titel, artiest en voorkant in!");
         return;
     }
-    albums.push({
-        titel: titelVal, artiest: artiestVal, front: frontVal,
+
+    const nieuwAlbum = {
+        titel: titelVal,
+        artiest: artiestVal,
+        front: frontVal,
         back: document.getElementById("back").value || frontVal,
         spotify: document.getElementById("spotify").value,
         youtube: document.getElementById("youtube").value
-    });
+    };
+
+    hideForms();
+
+    try {
+        const response = await fetch(sheetdbUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: [nieuwAlbum] })
+        });
+
+        if (response.ok) {
+            alert("LP volautomatisch toegevoegd aan Google Sheets!");
+            fetchAlbums(); // Ververs het scherm direct met de nieuwe sheet-data
+        } else {
+            alert("Er ging iets mis bij het opslaan in Google Sheets.");
+        }
+    } catch (err) {
+        alert("Fout bij het verbinden met de database: " + err.message);
+    }
+
+    // Velden leegmaken
     document.getElementById("titel").value = ""; document.getElementById("artiest").value = "";
     document.getElementById("front").value = ""; document.getElementById("back").value = "";
     document.getElementById("spotify").value = ""; document.getElementById("youtube").value = "";
-    hideForms();
-    searchLPs();
-    saveToGitHub();
 }
 
-function removeLP() {
+// Volautomatisch verwijderen uit Google Sheets
+async function removeLP() {
     const index = document.getElementById("removeSelect").value;
     if(index === "") return;
-    albums.splice(index, 1);
+    
+    const albumTitel = albums[index].titel;
     hideForms();
-    searchLPs();
-    saveToGitHub();
+
+    try {
+        // Verwijdert de rij uit Google Sheets op basis van de albumtitel
+        const response = await fetch(`${sheetdbUrl}/titel/${encodeURIComponent(albumTitel)}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+            alert("LP succesvol verwijderd uit Google Sheets!");
+            fetchAlbums();
+        } else {
+            alert("Kon de LP niet verwijderen uit Google Sheets.");
+        }
+    } catch (err) {
+        alert("Verbindingsfout: " + err.message);
+    }
 }
 
 function loadEditFields() {
     const index = document.getElementById("editSelect").value;
     if (index === "" || !albums[index]) return;
+    
     const album = albums[index];
     document.getElementById("editTitel").value = album.titel;
     document.getElementById("editArtiest").value = album.artiest;
@@ -493,18 +450,40 @@ function loadEditFields() {
     document.getElementById("editYouTube").value = album.youtube || "";
 }
 
-function editLP() {
+// Volautomatisch aanpassen in Google Sheets
+async function editLP() {
     const index = document.getElementById("editSelect").value;
     if (index === "" || !albums[index]) return;
-    albums[index].titel = document.getElementById("editTitel").value;
-    albums[index].artiest = document.getElementById("editArtiest").value;
-    albums[index].front = document.getElementById("editFront").value;
-    albums[index].back = document.getElementById("editBack").value;
-    albums[index].spotify = document.getElementById("editSpotify").value;
-    albums[index].youtube = document.getElementById("editYouTube").value;
+    
+    const oudeTitel = albums[index].titel;
+    
+    const geupdateAlbum = {
+        titel: document.getElementById("editTitel").value,
+        artiest: document.getElementById("editArtiest").value,
+        front: document.getElementById("editFront").value,
+        back: document.getElementById("editBack").value,
+        spotify: document.getElementById("editSpotify").value,
+        youtube: document.getElementById("editYouTube").value
+    };
+
     hideForms();
-    searchLPs();
-    saveToGitHub();
+
+    try {
+        const response = await fetch(`${sheetdbUrl}/titel/${encodeURIComponent(oudeTitel)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: geupdateAlbum })
+        });
+
+        if (response.ok) {
+            alert("LP succesvol aangepast in Google Sheets!");
+            fetchAlbums();
+        } else {
+            alert("Kon de wijzigingen niet opslaan.");
+        }
+    } catch (err) {
+        alert("Verbindingsfout: " + err.message);
+    }
 }
 
 function extractYear(artistString) {
@@ -515,7 +494,12 @@ function extractYear(artistString) {
 function searchLPs() {
     const q = document.getElementById("searchBox").value.toLowerCase();
     const sortMethod = document.getElementById("sortBox").value;
-    let filtered = albums.filter(album => album.titel.toLowerCase().includes(q) || album.artiest.toLowerCase().includes(q));
+    
+    let filtered = albums.filter(album => 
+        album.titel.toLowerCase().includes(q) || 
+        album.artiest.toLowerCase().includes(q)
+    );
+
     filtered.sort((a, b) => {
         if (sortMethod === "titelAZ") return a.titel.localeCompare(b.titel);
         if (sortMethod === "artiestAZ") return a.artiest.localeCompare(b.artiest);
@@ -523,6 +507,7 @@ function searchLPs() {
         if (sortMethod === "jaarOud") return extractYear(a.artiest) - extractYear(b.artiest);
         return 0;
     });
+
     renderAlbums(filtered);
 }
 
